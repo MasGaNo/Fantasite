@@ -1,0 +1,5 @@
+- Script qui genere projet Fantasite
+- Image: sauvegarde dans le bon format avec gestion transparence pour Gif et PNG
+- Db: finir les methodes manquantes
+- Url : _generateRewriteUri => si les parametres sont que des parametres par defaut, ne pas afficher les parametres par defaut en partant de la droite. array_reverse + comparaison sur les parametres de la route pour tester si on n'affiche pas les valeurs ?
+- Db: FetchBy: pas sur que ca marche avec tous les FetchMode. Si jamais c'est incompatible, limiter les choix des FetchMode a ceux compatible (object, array, ...)
