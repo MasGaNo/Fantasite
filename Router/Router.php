@@ -132,7 +132,7 @@ class	FS_Router extends FS_Singleton
             if ($pReset === FALSE) {
                 $pParameters = array_merge($_GET, $pParameters);
             }
-            return $this->_listRoute[$pRouteName]->Assemble($pParameters);
+            return $this->_ignorePath . $this->_listRoute[$pRouteName]->Assemble($pParameters);
         }
 };
 

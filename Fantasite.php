@@ -12,6 +12,8 @@ class	Fantasite
 	const VIEWS = 'views';
 	const LAYOUTS = 'layouts';
 	const SCRIPTS = 'scripts';
+        
+        private static $_pathAutoload;
 	
         private static $_instance = NULL;
         
@@ -40,6 +42,8 @@ class	Fantasite
             
             self::$_instance = $this;
             
+            self::$_pathAutoload = array();
+            
             $this->_pluginList = array();
 
             if (!defined('APPLICATION_ENV')) {
@@ -52,6 +56,17 @@ class	Fantasite
                 define('FANTASITE_PATH', './Fantasite/');
             }
 
+            spl_autoload_register(function($pClassName) {
+                foreach (self::$_pathAutoload AS $lPath => $lAlias) {
+                    $lClassName = str_replace('_', '/', str_replace($lAlias, '', $pClassName)) . '.php';//spl_autoload_extensions() ?
+                    if (file_exists($lPath . $lClassName)) {
+                        include_once($lPath . $lClassName);
+                    }
+                }
+            });
+            
+            self::AddAutoloadPath(FANTASITE_PATH, 'FS_');
+            
             $this->loadModules();
 
             if (!is_null($pConfigFile))
@@ -80,8 +95,8 @@ class	Fantasite
                 $this->LaunchProgram();
             }
 	}
-	
-	/**
+
+        /**
 	 *	Return Config object from file configuration
 	 *	@param	bool	$envConfig	If True, return only configuration for the current environment
 	 *	@return	Array
@@ -92,6 +107,16 @@ class	Fantasite
 			return self::$_config[APPLICATION_ENV];
 		return self::$_config;
 	}
+        
+        /**
+         * Add autoload class path.
+         * @param string $path  Path of root directory
+         * @param string $prefixClassName   Prefix for class name to remove from path
+         */
+        static public function AddAutoloadPath($pPath, $pPrefixClassName = '')
+        {
+            self::$_pathAutoload[$pPath] = $pPrefixClassName;
+        }
         
         /**
          * Add new Plugin to program.
@@ -128,7 +153,7 @@ class	Fantasite
             $lControllerClass .= 'Controller';
             $lAction = ucfirst($lRequest->GetAction());
             $lAction .= 'Action';
-
+            
             //Load PreHook file like Identification, LangSelector, ACL, ...
 
             $this->_executePluginMethod(FS_Plugin::BEFORE_START);

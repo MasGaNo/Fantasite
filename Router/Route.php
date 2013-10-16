@@ -5,6 +5,8 @@
  */
 class	FS_Route
 {
+    const MODULE = 'module';
+    
 	private $_name;
 	private $_route;
 	private $_datas;
@@ -46,38 +48,44 @@ class	FS_Route
 	 */
 	private function _parseRoute()
 	{
-		$lParts = explode('/', trim($this->_route, '/'));
-		
-		$this->_parts = array();
-		$this->_partsParam = array();
-		
-		foreach ($lParts AS $lKey => $lVal) {
-			$lPart = new stdClass();
-			$lPart->match = TRUE;
-			$lPart->require = TRUE;
-			$lPart->name = $lVal;
-			if ($lVal[0] !== ':') {
-				$this->_minPartsCount = $lKey;
-				$this->_parts[] = $lPart;
-			} else {
-				$lVal = substr($lVal, 1);
-				$lPart->name = $lVal;
-				$lPart->match = FALSE;
-				if (!empty($this->_datas[$lVal])) {
-					$lPart->require = FALSE;
-					$lPart->default = $this->_datas[$lVal];
-				}
-				$this->_partsParam[$lVal] = $this->_parts[] = $lPart;
-			}
-		}
-		
-		if (isset($this->_datas['require']) && is_array($this->_datas['require'])) {
-			foreach ($this->_datas['require'] AS $lKey => $lVal) {
-				$this->_partsParam[$lKey]->require = $lVal;
-			}
-		}
-	
-		return $this;
+            $lParts = explode('/', trim($this->_route, '/'));
+
+            $this->_parts = array();
+            $this->_partsParam = array();
+
+            foreach ($lParts AS $lKey => $lVal) {
+                $lPart = new stdClass();
+                $lPart->match = TRUE;
+                $lPart->require = TRUE;
+                $lPart->name = $lVal;
+                if ($lVal[0] !== ':') {
+                    $this->_minPartsCount = $lKey;
+                    $this->_parts[] = $lPart;
+                } else {
+                    $lVal = substr($lVal, 1);
+                    $lPart->name = $lVal;
+                    $lPart->match = FALSE;
+                    if (!empty($this->_datas[$lVal])) {
+                        $lPart->require = FALSE;
+                        $lPart->default = $this->_datas[$lVal];
+                    }
+                    $this->_partsParam[$lVal] = $this->_parts[] = $lPart;
+                }
+            }
+
+            if (isset($this->_datas['require']) && is_array($this->_datas['require'])) {
+                foreach ($this->_datas['require'] AS $lKey => $lVal) {
+                    if (!isset($this->_partsParam[$lKey])) {
+                        $this->_partsParam[$lKey] = (object)array('match' => TRUE, 'name' => $lKey);
+                        if (isset($this->_datas[$lKey])) {
+                            $this->_partsParam[$lKey]->default = $this->_datas[$lKey];
+                        }
+                    }
+                    $this->_partsParam[$lKey]->require = $lVal;
+                }
+            }
+
+            return $this;
 	}
 	
 	/**
@@ -92,6 +100,11 @@ class	FS_Route
             } else if (!is_array($pUrl)) {
                 FS_Exception::Launch('Bad parameter for FS_Route::Match: expected array or string.');
             }
+            
+            if (isset($this->_partsParam[self::MODULE]) && $this->_partsParam[self::MODULE]->require === TRUE && $this->_partsParam[self::MODULE]->default !== FS_Request::GetInstance()->GetModule()) {
+                return FALSE;
+            }
+            
             $lMax = count($pUrl);
             $lTotalMax = count($this->_parts);
             if ($lMax < $this->_minPartsCount || $lMax > $lTotalMax) {
@@ -104,7 +117,7 @@ class	FS_Route
                 $lParts = $this->_parts[$i];
 
                 if ($lParts->match === TRUE) {
-					if (strcasecmp($lParts->name, $lValue) !== 0)
+                    if (strcasecmp($lParts->name, $lValue) !== 0) {
                         return FALSE;
                     }
                 } else {
@@ -145,12 +158,14 @@ class	FS_Route
             } else if (!is_array($pUrl)) {
                 FS_Exception::Launch('Bad parameter for FS_Route::Match: expected array or string.');
             }
-            
-            foreach (array('controller', 'action') AS $lParam) {
+
+            /*foreach (array('controller', 'action') AS $lParam) {
                 if (isset($this->_datas[$lParam])) {
-                    $_GET[$lParam] = $this->_datas[$lParam];
+                    //$_GET[$lParam] = $this->_datas[$lParam];
+                    $lMethod = 'Set' . ucfirst($lParam);
+                    FS_Request::GetInstance()->$lMethod($this->_datas[$lParam]);
                 }
-            }
+            }*/
             
             $lInd = 0;
             $lMax = count($pUrl);
@@ -169,6 +184,13 @@ class	FS_Route
                 if (property_exists($lParts, 'default')) {
                     $_GET[$lParts->name] = $lParts->default;
                 }
+            }
+            
+            if (isset($_GET['action'])) {
+                FS_Request::GetInstance()->SetAction($_GET['action']);
+            }
+            if (isset($_GET['controller'])) {
+                FS_Request::GetInstance()->SetController($_GET['controller']);
             }
             
             if (isset($this->_datas['module'])) {
@@ -207,11 +229,30 @@ class	FS_Route
                 }
             }
             if ($this->_isRewrite === TRUE) {
-                return $this->_generateRewriteUri($lUri);
+                return $this->_generateRewriteUri($this->_cleanUri($lUri));
             }
             return $this->_generateBasicUri($lUri);
 	}
 	
+        /**
+         * Clean Uri and remove default parameters
+         * @param array $uri    Uri data to clean
+         * @return array
+         */
+        private function _cleanUri(Array &$pUri)
+        {
+            $pUri = array_reverse($pUri);
+            foreach ($pUri AS $lKey => $lValue) {
+                $lPart = $this->_partsParam[$lValue['name']];
+                if ($lPart->require === FALSE && property_exists($lPart, 'default') && strcasecmp($lPart->default, $lValue['value']) === 0) {
+                    unset($pUri[$lKey]);
+                } else {
+                    break;
+                }
+            }
+            return array_reverse($pUri);
+        }
+        
 	/**
 	 *	Generate rewrite url
 	 *	@param	Array	$uri	List of parts uri
@@ -226,7 +267,7 @@ class	FS_Route
                 }*/
                 $lUri[] = $lValue['value'];
             }
-            return count($lUri) ? '/' . implode('/', $lUri) : '';
+            return count($lUri) ? '/' . implode('/', $lUri) : '/';
 	}
 	
 	/**

@@ -11,9 +11,9 @@ class	FS_Request extends FS_Singleton
 	private $_action;
 	
 	protected function __construct()
-	{	
-		$this->_controller = $this->GetGet('controller', 'Index');
-		$this->_action = $this->GetGet('action', 'Index');
+	{
+            $this->_controller = $this->GetGet('controller', 'Index');
+            $this->_action = $this->GetGet('action', 'Index');
 	}
         
         /**
@@ -39,7 +39,18 @@ class	FS_Request extends FS_Singleton
 	 */
 	public function GetController()
 	{
-		return $this->_controller;
+            return $this->_controller;
+	}
+	
+        /**
+         * Set new controller
+         * @param string $controller    Controller name
+         * @return \FS_Request
+         */
+        public function SetController($pController)
+	{
+            $this->_controller = $_GET['controller'] = $pController;
+            return $this;
 	}
 	
 	/**
@@ -48,7 +59,18 @@ class	FS_Request extends FS_Singleton
 	 */
 	public function GetAction()
 	{
-		return $this->_action;
+            return $this->_action;
+	}
+
+        /**
+         * Set new Action
+         * @param string $action    Action name
+         * @return \FS_Request
+         */
+        public function SetAction($pAction)
+	{
+            $this->_action = $_GET['action'] = $pAction;
+            return $this;
 	}
 	
 	/**
