@@ -2,7 +2,7 @@
 
 require_once('Input.php');
 
-class FS_Form_Element_Text extends FS_Form_Element_Input
+class FS_Form_Element_Password extends FS_Form_Element_Input
 {
     /**
      * Construct Text element
@@ -10,6 +10,6 @@ class FS_Form_Element_Text extends FS_Form_Element_Input
      */
     public function __construct(array $pOptions = array())
     {
-        parent::__construct(self::TYPE_TEXT, $pOptions);
+        parent::__construct(self::TYPE_PASSWORD, $pOptions);
     }
 };

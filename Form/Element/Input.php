@@ -18,7 +18,18 @@ class FS_Form_Element_Input extends FS_Form_Element
      */
     public function __construct($pType, array $pOptions = array())
     {
-        parent::__construct();
+        parent::__construct($pOptions);
         $this->_type = $pType;
     }
+    
+    /**
+     * Get instance of element
+     * @param array $options
+     * @return FS_Html Html element
+     */
+    protected function getElementInstance(array &$pOptions = array())
+    {
+        return new FS_Html_Input($this->_type);
+    }
+
 };

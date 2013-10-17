@@ -19,16 +19,20 @@ abstract class FS_Plugin
     
     /**
      * Call before Controller is called
+     * @return Boolean  If FALSE, stop execution of script and return buffer.
      */
     public function BeforeStart()
     {
+        return TRUE;
     }
     
     /**
      * Call after Controller called and before View is called
+     * @return Boolean  If FALSE, cancel render of view and return buffer.
      */
     public function BeforeRender()
     {
+        return TRUE;
     }
     
     /**
