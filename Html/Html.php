@@ -57,7 +57,7 @@ abstract class FS_Html
             return $this->_attr[$pName];
         } else {
             foreach ($this->_attr AS $lKey => $lValue) {
-                if (is_numeric($lKey)) {
+                if (is_numeric($lKey) && $lValue === $pName) {
                     return $lValue;
                 }
             }
@@ -72,7 +72,7 @@ abstract class FS_Html
      */
     public function SetName($pName)
     {
-        return $this->SetAttribute(self::ATTR_NAME, $pName);
+        return $this->AddAttribute(self::ATTR_NAME, $pName);
     }
     
     /**
@@ -91,7 +91,7 @@ abstract class FS_Html
      */
     public function SetId($pId)
     {
-        return $this->SetAttribute(self::ATTR_ID, $pId);
+        return $this->AddAttribute(self::ATTR_ID, $pId);
     }
     
     /**

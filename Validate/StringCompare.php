@@ -3,7 +3,7 @@
 /**
  * Compare string
  */
-class FS_Validate_StringCompare
+class FS_Validate_StringCompare extends FS_Validate
 {
     private $_callable;
     
@@ -12,10 +12,10 @@ class FS_Validate_StringCompare
      * @param string|callable $callable Value to compare or callable to get value to compare
      * @param Boolean $validValue   Value to compare if Validate is valid. Default: TRUE.
      */
-    public function __constructor($pCallable, $pValidValue = TRUE)
+    public function __construct($pCallable, $pValidValue = TRUE)
     {
         $this->_callable = $pCallable;
-        parent::__constructor($pValidValue);
+        parent::__construct($pValidValue);
     }
     /**
      * Check string is the same to value to compare
@@ -29,6 +29,9 @@ class FS_Validate_StringCompare
         } else if (is_array($this->_callable)) {
             $lProperty = $this->_callable[1];
             $lStr = $this->_callable[0]->$lProperty;
+            if ($lStr instanceof FS_Form_Element) {
+                $lStr = $lStr->GetValue();
+            }
         }
         if (($lStr === $pValue) !== $this->GetValidValue()) {
             $this->SetError(FS_Translate::GetInstance()->Translate('_FS_VALIDATE_STRING_COMPARE_ERROR'));

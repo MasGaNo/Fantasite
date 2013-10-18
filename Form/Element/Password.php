@@ -6,10 +6,11 @@ class FS_Form_Element_Password extends FS_Form_Element_Input
 {
     /**
      * Construct Text element
+     * @param string $name  Name of element
      * @param array $options
      */
-    public function __construct(array $pOptions = array())
+    public function __construct($pName, array $pOptions = array())
     {
-        parent::__construct(self::TYPE_PASSWORD, $pOptions);
+        parent::__construct($pName, self::TYPE_PASSWORD, $pOptions);
     }
 };

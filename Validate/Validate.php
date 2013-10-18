@@ -12,7 +12,7 @@ abstract class FS_Validate
      * Constructor
      * @param Boolean $validValue   Value to compare if Validate is valid. Default: TRUE.
      */
-    public function __constructor($pValidValue = TRUE)
+    public function __construct($pValidValue = TRUE)
     {
         $this->_validValue = $pValidValue;
     }

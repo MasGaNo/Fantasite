@@ -12,6 +12,9 @@ class	FS_Request extends FS_Singleton
     const METHOD_HEAD = 'HEAD';
     const METHOD_PUT = 'PUT';
     const METHOD_PATCH = 'PATCH';
+    const METHOD_DELETE = 'DELETE';
+    const METHOD_CONNECT = 'CONNECT';
+    const METHOD_TRACE = 'TRACE';
     
     private $_controller;
     private $_action;
@@ -189,6 +192,15 @@ class	FS_Request extends FS_Singleton
     public function IsHead()
     {
         return $this->GetMethod() === self::METHOD_HEAD;
+    }
+    
+    /**
+     * Check if request's method is DELETE
+     * @return Boolean
+     */
+    public function IsDelete()
+    {
+        return $this->GetMethod() === self::METHOD_DELETE;
     }
 
     /**

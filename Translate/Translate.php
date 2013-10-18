@@ -19,6 +19,17 @@ class FS_Translate extends FS_Singleton
      * @param string $lang  Set language to translate. If NULL use current language.
      * @return string
      */
+    public function __invoke($pKey, $pLang = NULL)
+    {
+        return $this->Translate($pKey, $pLang);
+    }
+    
+    /**
+     * Translate key
+     * @param string $key
+     * @param string $lang  Set language to translate. If NULL use current language.
+     * @return string
+     */
     public function Translate($pKey, $pLang = NULL)
     {
         return $pKey;

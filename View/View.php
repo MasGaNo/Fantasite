@@ -146,19 +146,19 @@ class	FS_View
 	 */
 	public function Render()
 	{
-		ob_start();
-                foreach (array('', '/' . Fantasite::SCRIPTS . '/' . FS_Request::GetInstance()->GetAction(), '/' . Fantasite::SCRIPTS, '/' . Fantasite::LAYOUTS) AS $lSubDirectory) {
-                    $lFile = APPLICATION_PATH . Fantasite::MODULES . 
-                                            '/' . (isset($this->_module) ? $this->_module : FS_Request::GetInstance()->GetModule()) . //Default ?
-                                            '/' . Fantasite::VIEWS .
-                                            $lSubDirectory .
-                                            '/' . $this->_script;
-                    if (file_exists($lFile)) {
-                        break;
-                    }
+            ob_start();
+            foreach (array('', '/' . Fantasite::SCRIPTS . '/' . FS_Request::GetInstance()->GetAction(), '/' . Fantasite::SCRIPTS, '/' . Fantasite::LAYOUTS) AS $lSubDirectory) {
+                $lFile = APPLICATION_PATH . Fantasite::MODULES . 
+                                        '/' . (isset($this->_module) ? $this->_module : FS_Request::GetInstance()->GetModule()) . //Default ?
+                                        '/' . Fantasite::VIEWS .
+                                        $lSubDirectory .
+                                        '/' . $this->_script;
+                if (file_exists($lFile)) {
+                    break;
                 }
-		include($lFile);
-		return ob_get_clean();
+            }
+            include($lFile);
+            return ob_get_clean();
 	}
 	
 	/**

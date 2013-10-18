@@ -17,7 +17,7 @@ class HeadMethod extends FS_Plugin
      *                                                          - actionName
      * controllerName and actionName value can be * to execute all module or controller.
      */
-    public function __constructor(array $pModuleControllerActionList = array())
+    public function __construct(array $pModuleControllerActionList = array())
     {
         $this->_moduleControllerAction = $pModuleControllerActionList;
     }

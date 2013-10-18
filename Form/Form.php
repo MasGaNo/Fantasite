@@ -5,21 +5,29 @@ require_once('./Element/Element.php');
 /**
  * Class to manage HTML form
  */
-abstract class FS_Form //extends FS_Html ?
+abstract class FS_Form extends FS_Html
 {
     const METHOD_POST = 'post';
     const METHOD_GET = 'get';
+    const METHOD_PUT = 'put';
+    const METHOD_DELETE = 'delete';
+    const METHOD_TRACE = 'trace';
+    const METHOD_CONNECT = 'connect';
+    const METHOD_PATCH = 'patch';
     
-    //const ENCTYPE_ = '';
+    const ENCTYPE_URLENCODE = 'application/x-www-form-urlencoded';
+    const ENCTYPE_MULTIPART = 'multipart/form-data';
+    const ENCTYPE_TEXTPLAIN = 'text/plain';
+    
+    const ATTR_ACTION = 'action';
+    const ATTR_METHOD = 'method';
+    const ATTR_ENCTYPE = 'enctype';
     
     private $_elements;
     private $_setElements;
     private $_options;
     
-    private $_action;
-    private $_method;
-    private $_enctype;
-    private $_name;
+    private $_errors;
     
     /**
      * Construct Form
@@ -27,9 +35,14 @@ abstract class FS_Form //extends FS_Html ?
      */
     public function __construct($pOptions = NULL)
     {
+        parent::__construct('form', TRUE);
         $this->_elements = array();
         $this->_setElements = array();
         $this->_options = $pOptions;
+        
+        $this->_errors = array();
+        
+        $this->init();
     }
     
     /**
@@ -52,7 +65,7 @@ abstract class FS_Form //extends FS_Html ?
     
     public function __set($pName, FS_Form_Element $pElement)
     {
-        $this->_elements[$pName] = $pElement;
+        $this->_setElements[$pName] = $pElement;
     }
     
     /**
@@ -84,7 +97,8 @@ abstract class FS_Form //extends FS_Html ?
      */
     public function Render()
     {
-        return implode('', $this->_elements);
+        $this->SetContent(implode('', $this->_elements));
+        return parent::Render();
     }
     
     /**
@@ -94,7 +108,8 @@ abstract class FS_Form //extends FS_Html ?
      */
     public function SetAction($pAction)
     {
-        $this->_action = $pAction;
+        //$this->_action = $pAction;
+        $this->AddAttribute(self::ATTR_ACTION, $pAction);
         return $this;
     }
     
@@ -104,7 +119,7 @@ abstract class FS_Form //extends FS_Html ?
      */
     public function GetAction()
     {
-        return $this->_action;
+        return $this->GetAttribute(self::ATTR_ACTION);
     }
     
     /**
@@ -114,7 +129,7 @@ abstract class FS_Form //extends FS_Html ?
      */
     public function SetEncType($pEncType)
     {
-        $this->_enctype = $pEncType;
+        $this->AddAttribute(self::ATTR_ENCTYPE, $pEncType);
         return $this;
     }
     
@@ -124,7 +139,7 @@ abstract class FS_Form //extends FS_Html ?
      */
     public function GetEncType()
     {
-        return $this->_enctype;
+        return $this->GetAttribute(self::ATTR_ENCTYPE);
     }
     
     /**
@@ -134,7 +149,7 @@ abstract class FS_Form //extends FS_Html ?
      */
     public function SetMethod($pMethod)
     {
-        $this->_method = $pMethod;
+        $this->AddAttribute(self::ATTR_METHOD, $pMethod);
         return $this;
     }
     
@@ -144,7 +159,7 @@ abstract class FS_Form //extends FS_Html ?
      */
     public function GetMethod()
     {
-        return $this->_method;
+        return $this->GetAttribute(self::ATTR_METHOD);
     }
     
     /**
@@ -154,17 +169,36 @@ abstract class FS_Form //extends FS_Html ?
      */
     public function SetName($pName)
     {
-        $this->_name = $pName;
-        return $this;
+        return parent::SetName($pName);
     }
     
     /**
-     * Get value of form
-     * @return string
+     * Check is form is valid
+     * @param array $values Form's values
+     * @return boolean
      */
-    public function GetName()
+    public function IsValid(array $pValues)
     {
-        return $this->_name;
+        $lIsValid = TRUE;
+        foreach ($this->_elements AS $lElement) {
+            if (isset($pValues[$lElement->GetName()])) {
+                $lElement->SetValue($pValues[$lElement->GetName()]);
+            }
+            if ($lElement->IsValid() === FALSE) {
+                $lIsValid = FALSE;
+                $this->_errors[$lElement->GetName()] = $lElement->GetErrors();
+            }
+        }
+        return $lIsValid;
+    }
+    
+    /**
+     * Get errors after validation.
+     * @return array
+     */
+    public function GetErrors()
+    {
+        return $this->_errors;
     }
     
     /**
