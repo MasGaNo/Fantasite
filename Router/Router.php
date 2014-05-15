@@ -79,7 +79,7 @@ class	FS_Router extends FS_Singleton
                 }
             }
             $lUri = array_merge($lUri);
-
+            
             $lFind = FALSE;
             foreach ($this->_listRoute AS $lRoute) {
                 if ($lRoute->Match($lUri)) {

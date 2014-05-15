@@ -58,7 +58,6 @@ class	FS_View
 
             foreach (self::$_includedPaths AS $lPath => $lVal) {
                 $lClassName = str_replace('/', '_', (!is_null($lVal) ? $lVal : $lPath) . $lName);
-            
                 if (class_exists($lClassName, false)) {
                     $lFound = TRUE;
                     break;
@@ -114,30 +113,33 @@ class	FS_View
 	 */
 	public function Assign($pDatas, $pValue = NULL)
 	{
-		if (is_string($pDatas)) {
-			if (substr($pDatas, 0, 1) === '_') {
-				FS_Exception::Launch('Setting private or protected class members is not allowed: ' . $pDatas);
-			}
-			$this->$pDatas = $pValue;
-		}
-		else if (is_array($pDatas)) {
-			foreach ($pDatas AS $lKey => $lValue) {
-				if (substr($lKey, 0, 1) === '_') {
-					FS_Exception::Launch('Setting private or protected class members is not allowed: ' . $lKey);
-				}
-				$this->$lKey = $lValue;
-			}
-		} else if (is_object($pDatas)) {
-			$lDatas = get_object_vars($pDatas);
-			foreach ($lDatas AS $lKey => $lValue) {
-				if (substr($lKey, 0, 1) !== '_') {
-					$this->$lKey = $lValue;
-				}
-			}
-		} else {
-			FS_Exception::Launch('Datas is not an array or an object.');
-		}
-		return $this;
+            if ($pDatas instanceof FS_Model_Entity) {
+                $pDatas = $pDatas->toArray();
+            }
+            if (is_string($pDatas)) {
+                if (substr($pDatas, 0, 1) === '_') {
+                    FS_Exception::Launch('Setting private or protected class members is not allowed: ' . $pDatas);
+                }
+                $this->$pDatas = $pValue;
+            }
+            else if (is_array($pDatas)) {
+                foreach ($pDatas AS $lKey => $lValue) {
+                    if (substr($lKey, 0, 1) === '_') {
+                        FS_Exception::Launch('Setting private or protected class members is not allowed: ' . $lKey);
+                    }
+                    $this->$lKey = $lValue;
+                }
+            } else if (is_object($pDatas)) {
+                $lDatas = get_object_vars($pDatas);
+                foreach ($lDatas AS $lKey => $lValue) {
+                    if (substr($lKey, 0, 1) !== '_') {
+                        $this->$lKey = $lValue;
+                    }
+                }
+            } else {
+                FS_Exception::Launch('Datas is not an array or an object.');
+            }
+            return $this;
 	}
 	
 	/**
@@ -147,7 +149,7 @@ class	FS_View
 	public function Render()
 	{
             ob_start();
-            foreach (array('', '/' . Fantasite::SCRIPTS . '/' . FS_Request::GetInstance()->GetAction(), '/' . Fantasite::SCRIPTS, '/' . Fantasite::LAYOUTS) AS $lSubDirectory) {
+            foreach (array('', '/' . Fantasite::SCRIPTS . '/' . FS_Request::GetInstance()->GetController(), '/' . Fantasite::SCRIPTS, '/' . Fantasite::LAYOUTS) AS $lSubDirectory) {
                 $lFile = APPLICATION_PATH . Fantasite::MODULES . 
                                         '/' . (isset($this->_module) ? $this->_module : FS_Request::GetInstance()->GetModule()) . //Default ?
                                         '/' . Fantasite::VIEWS .

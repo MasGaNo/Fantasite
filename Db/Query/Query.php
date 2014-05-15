@@ -9,6 +9,8 @@ abstract class	FS_Db_Query
 	const FETCH_OBJECT = 'fetch_object';
 	const FETCH_ROW = 'fetch_row';
 	
+        const PLACE_HOLDER = '?';
+        
 	private $_db;
 	protected $_options;
 	
@@ -119,16 +121,34 @@ abstract class	FS_Db_Query
 		return $this;
 	}
 	
-	/**
-	 *	Add Where clause
-	 *	@param	string	$where	Where clause
-	 *	@return	FS_Db_Query
-	 */
-	public function	Where($pWhere)
-	{
-		$this->_where[] = $pWhere;
-		return $this;
-	}
+    /**
+     *	Add Where clause
+     *	@param	string	$where	Where clause
+     *  @param  mixed   $placeHolder OPTIONAL The value to quote into the condition
+     *	@return	FS_Db_Query
+     */
+    public function Where($pWhere, $pPlaceHolder = NULL)
+    {
+        if (is_null($pPlaceHolder)) {
+            $this->_where[] = $pWhere;
+        } else {
+            $lCount = preg_match_all('#\?#', $pWhere);
+            if (is_array($pPlaceHolder) && $lCount > 1) {
+                $lWhere = $pWhere;
+                foreach ($pPlaceHolder AS $lPlaceHolder) {
+                    $lPos = strpos($lWhere, self::PLACE_HOLDER);
+                    if ($lPos === FALSE) {
+                        FS_Exception::Launch('Number of values passed in FS_Db_Query::Where doesn\'t match with the number of place holder (' . self::PLACE_HOLDER . ') in the query: ' . $pWhere);
+                    }
+                    $lWhere = substr_replace($lWhere, $this->Quote($lPlaceHolder), $lPos, 1);
+                }
+                $this->_where[] = $lWhere;
+            } else {
+                $this->_where[] = str_replace(self::PLACE_HOLDER, $this->Quote($pPlaceHolder), $pWhere);
+            }
+        }
+        return $this;
+    }
 	
 	public function OrWhere()
 	{
@@ -142,13 +162,14 @@ abstract class	FS_Db_Query
 	
 	/**
 	 *	Add Order clause
-	 *	@param	string|array	$order	string for unique order clause ASC. array for multiple order clauses. If a key/value is used, the key will be the order clause and the value the ASC/DESC 
+	 *	@param	string|array	$order      string for unique order clause ASC. array for multiple order clauses. If a key/value is used, the key will be the order clause and the value the ASC/DESC 
+	 *	@param	string  	$direction  If $order is string, $direction is used for order clause. Default: ASC
 	 *	@return FS_Db_Query
 	 */
-	public function Order($pOrder)
+	public function Order($pOrder, $pDirection = 'ASC')
 	{
 		if (is_string($pOrder)) {
-			$this->_order[] = '`' . trim($pOrder, '`') . '`';
+			$this->_order[] = '`' . trim($pOrder, '`') . '` ' . $pDirection;
 		} else if (is_array($pOrder)) {
 			foreach ($pOrder AS $lKey => $lValue) {
 				if (is_numeric($lKey)) {
@@ -191,11 +212,17 @@ abstract class	FS_Db_Query
 	
 	/**
 	 *	Get next query's row.
-	 *	@param	string	$fetch	Fetch mode. Default: FETCH_OBJECT	
+	 *	@param	string	$fetch	Fetch mode or class name to instantiate object. Default: FETCH_OBJECT	
+	 *	@param	string	$class	Class name to instantiate object	
 	 *	@return	mixed
 	 */
-	public function FetchRow($pFetch = FS_Db_Query::FETCH_OBJECT)
+	public function FetchRow($pFetch = FS_Db_Query::FETCH_OBJECT, $pClass = NULL)
 	{
+            if (is_null($pClass) && class_exists($pFetch)) {
+                $pClass = $pFetch;
+                $pFetch = FS_Db_Query::FETCH_ASSOC;
+            }
+            
             if (is_null($this->_result)) {
                 if (is_null($this->_query)) {
                     $this->Prepare($this->Assemble());
@@ -203,27 +230,42 @@ abstract class	FS_Db_Query
                 $this->Execute();
             }
             $method = 'mysql_' . $pFetch;
-            return $method($this->_result);
+            if (is_null($pClass)) {
+                return $method($this->_result);
+            }
+            return new $pClass($method($this->_result));
 	}
 	
 	/**
 	 *	Get all query's rows.
-	 *	@param	string	$fetch	Fetch mode. Default: FETCH_OBJECT	
+	 *	@param	string	$fetch	Fetch mode or class name to instantiate all object. Default: FETCH_OBJECT	
+	 *	@param	string	$class	Class name to instantiate all object	
 	 *	@return	array
 	 */
-	public function FetchAll($pFetch = FS_Db_Query::FETCH_OBJECT)
+	public function FetchAll($pFetch = FS_Db_Query::FETCH_OBJECT, $pClass = NULL)
 	{
-		if (is_null($this->_result)) {
-			if (is_null($this->_query)) {
-				$this->Prepare($this->Assemble());
-			}
-			$this->Execute();
-		}
-		$method = 'mysql_' . $pFetch;
-		
-		while ($lDatas[] = $method($this->_result));
-		array_pop($lDatas);
-		return $lDatas;
+            if (is_null($pClass) && class_exists($pFetch)) {
+                $pClass = $pFetch;
+                $pFetch = FS_Db_Query::FETCH_ASSOC;
+            }
+            
+            if (is_null($this->_result)) {
+                    if (is_null($this->_query)) {
+                            $this->Prepare($this->Assemble());
+                    }
+                    $this->Execute();
+            }
+            $method = 'mysql_' . $pFetch;
+            
+            if (is_null($pClass)) {
+                while ($lDatas[] = $method($this->_result));
+                array_pop($lDatas);
+            } else {
+                while ($lData = $method($this->_result)) {
+                    $lDatas[] = new $pClass($lData);
+                }
+            }
+            return $lDatas;
 	}
         
         /**
@@ -231,12 +273,13 @@ abstract class	FS_Db_Query
          * An array will be returned with key = field's value, and value the data object.
          * Warning: if the field's value is duplicate, the value will be overwritten and the last data object will be kept.
          * @param string $field Field name
-         * @param string $fetch Fetch mode. Default: FETCH_OBJECT
+	 * @param string $fetch	Fetch mode or class name to instantiate all object. Default: FETCH_OBJECT	
+	 * @param string $class	Class name to instantiate all object	
          * @return array
          */
-        public function FetchBy($pField, $pFetch = FS_Db_Query::FETCH_OBJECT)
+        public function FetchBy($pField, $pFetch = FS_Db_Query::FETCH_OBJECT, $pClass = NULL)
         {
-            $datas = $this->FetchAll($pFetch);
+            $datas = $this->FetchAll($pFetch, $pClass);
             $result = array();
             foreach ($datas AS &$data) {
                 $result[(object)$data->$pField] = $data;
@@ -297,4 +340,37 @@ abstract class	FS_Db_Query
 	{
 		return mysql_insert_id();
 	}
+        
+    /**
+     * Quote value to protect data
+     * @param mixed $value  Value to quoted
+     * @return mixed
+     */
+    public function Quote($pValue)
+    {
+        return self::QuoteValue($pValue);
+    }
+    
+    /**
+     * Quote value to protect data
+     * @param mixed $value  Value to quoted
+     * @return mixed
+     */
+    static public function QuoteValue($pValue)
+    {
+        if (is_array($pValue)) {
+            foreach ($pValue AS &$lValue) {
+                $lValue = self::QuoteValue($lValue);
+            }  
+            return implode(', ', $pValue);
+        } else if ($pValue instanceof FS_Db_Query) {
+            $pValue = $pValue->Assemble();
+        } else if ($pValue instanceof FS_Db_Expr) {
+            //$pValue = $pValue->toString();
+            return addcslashes($pValue, "\000\n\r\\'\"\032");
+        } else if (!is_string($pValue)) {
+            return $pValue;
+        }
+        return '"' . addcslashes($pValue, "\000\n\r\\'\"\032") . '"';
+    }
 }

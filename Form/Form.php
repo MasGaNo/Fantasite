@@ -202,6 +202,29 @@ abstract class FS_Form extends FS_Html
     }
     
     /**
+     * Get all values of form
+     * @return array
+     */
+    public function GetValues()
+    {
+        $lValues = array();
+        foreach ($this->_elements AS $lElement) {
+            $lValues[$lElement->GetName()] = $lElement->GetValue();
+        }
+        return $lValues;
+    }
+    
+    /**
+     * Reset value
+     */
+    public function Reset()
+    {
+        foreach ($this->_elements AS $lElement) {
+            $lElement->RemoveAttribute(FS_Html_Input::ATTR_VALUE);
+        }
+    }
+    
+    /**
      * Render all form
      * @return string
      */

@@ -200,6 +200,8 @@ class	Fantasite
             $this->_executePluginMethod(FS_Plugin::BEFORE_OUTPUT, $lRender);
 
             echo $lRender;
+            
+            $this->_executePluginMethod(FS_Plugin::END);
 	}
 	
 	private function loadModules()

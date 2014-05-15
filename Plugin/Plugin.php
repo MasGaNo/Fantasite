@@ -9,6 +9,7 @@ abstract class FS_Plugin
     const BEFORE_START = 'BeforeStart';
     const BEFORE_RENDER = 'BeforeRender';
     const BEFORE_OUTPUT = 'BeforeOutput';
+    const END = 'End';
     
     /**
      * Initialize the plugin. Call at the beginning of program.
@@ -40,6 +41,13 @@ abstract class FS_Plugin
      * @param string    $render Output of the page.
      */
     public function BeforeOutput($pRender)
+    {
+    }
+    
+    /**
+     * Call at the end of program
+     */
+    public function End()
     {
     }
 }

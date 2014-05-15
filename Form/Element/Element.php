@@ -123,6 +123,20 @@ abstract class FS_Form_Element extends FS_Html
     }
     
     /**
+     * Remove attribute
+     * @param string $name  Name of attribute to remove
+     * @return \FS_Form_Element
+     */
+    public function RemoveAttribute($pName)
+    {
+        if ($pName === FS_Html_Input::ATTR_VALUE) {
+            $this->_srcValue = NULL;
+        }
+        $this->_element->RemoveAttribute($pName);
+        return $this;
+    }
+    
+    /**
      * Set value of element
      * @param string $pValue
      * @return \FS_Form_Element

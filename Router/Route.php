@@ -100,7 +100,7 @@ class	FS_Route
             } else if (!is_array($pUrl)) {
                 FS_Exception::Launch('Bad parameter for FS_Route::Match: expected array or string.');
             }
-            
+
             if (isset($this->_partsParam[self::MODULE]) && $this->_partsParam[self::MODULE]->require === TRUE && $this->_partsParam[self::MODULE]->default !== FS_Request::GetInstance()->GetModule()) {
                 return FALSE;
             }
@@ -159,13 +159,14 @@ class	FS_Route
                 FS_Exception::Launch('Bad parameter for FS_Route::Match: expected array or string.');
             }
 
-            /*foreach (array('controller', 'action') AS $lParam) {
+            //If route doesn't have controller or action in url path, set default controller and action
+            foreach (array('controller', 'action') AS $lParam) {
                 if (isset($this->_datas[$lParam])) {
                     //$_GET[$lParam] = $this->_datas[$lParam];
                     $lMethod = 'Set' . ucfirst($lParam);
                     FS_Request::GetInstance()->$lMethod($this->_datas[$lParam]);
                 }
-            }*/
+            }
             
             $lInd = 0;
             $lMax = count($pUrl);
@@ -185,7 +186,7 @@ class	FS_Route
                     $_GET[$lParts->name] = $lParts->default;
                 }
             }
-            
+
             if (isset($_GET['action'])) {
                 FS_Request::GetInstance()->SetAction($_GET['action']);
             }

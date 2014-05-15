@@ -3,7 +3,7 @@
 /**
  * Plugin to detect HEAD request and return headers without execute controller/action method to avoid to execute all logic code for nothing.
  */
-class HeadMethod extends FS_Plugin
+class FS_Plugin_HeadMethod extends FS_Plugin
 {
     const WILDCARD = '*';
     

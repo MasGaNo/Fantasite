@@ -211,4 +211,25 @@ class	FS_Request extends FS_Singleton
     {
         return FALSE;
     }
+    
+    /**
+     * Get client IP
+     * @return string
+     */
+    public function GetClientIp()
+    {
+        if (isset($_SERVER['REMOTE_ADDR'])) {
+            return $_SERVER['REMOTE_ADDR'];
+        }
+        return NULL;
+    }
+    
+    /**
+     * If provided, get request referer
+     * @return string
+     */
+    public function GetReferer()
+    {
+        return NULL;
+    }
 };

@@ -66,6 +66,26 @@ abstract class FS_Html
     }
     
     /**
+     * Remove attribute
+     * @param string $name  Name of attribute to remove
+     * @return \FS_Html
+     */
+    public function RemoveAttribute($pName)
+    {
+        if (isset($this->_attr[$pName])) {
+            unset($this->_attr[$pName]);
+        } else {
+            foreach ($this->_attr AS $lKey => $lValue) {
+                if (is_numeric($lKey) && $lValue === $pName) {
+                    unset($this->_attr[$lKey]);
+                    break;
+                }
+            }
+        }
+        return $this;
+    }
+    
+    /**
      * Set name of element
      * @param string $name Name of element
      * @return FS_Html
